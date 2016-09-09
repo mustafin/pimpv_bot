@@ -1,5 +1,5 @@
-import java.io.{ByteArrayOutputStream, IOException}
-import javax.sound.sampled.{AudioFormat, LineUnavailableException, UnsupportedAudioFileException}
+import java.io.{ByteArrayOutputStream, File, IOException}
+import javax.sound.sampled.{AudioFormat, AudioSystem, LineUnavailableException, UnsupportedAudioFileException}
 
 import audio.tarsosdsp.OggWriter
 import be.tarsos.dsp
@@ -17,6 +17,8 @@ object Examplee {
   @throws[UnsupportedAudioFileException]
   @throws[LineUnavailableException]
   def main(args: Array[String]) {
+    println(AudioSystem.getAudioFileFormat(new File("gsd.ogg")).getFormat)
+    System.exit(0)
     System.out.println(System.getenv("PATH"))
     val dispatcher: AudioDispatcher = AudioDispatcherFactory.fromPipe("file.ogg", sampleRate, 2048, 2048-256)
     val gainProcessor: GainProcessor = new GainProcessor(1.0)

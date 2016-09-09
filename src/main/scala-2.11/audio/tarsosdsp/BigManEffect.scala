@@ -10,7 +10,7 @@ class BigManEffect(sampleRate: Double, overlap: Int) extends TarsosVoiceEffect{
 
   override val processors: Seq[AudioProcessor] = {
     List(
-      new PitchShifter(0.7,sampleRate, 2048, overlap)
+      new PitchShifter(0.7, sampleRate, 2048, overlap)
     )
   }
 }

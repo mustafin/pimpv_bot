@@ -1,6 +1,7 @@
-import java.io.{FileInputStream, File}
+import java.io.{File, FileInputStream}
 import java.util.Properties
 
+import audio.{VoiceChanger, VoiceEffect}
 import data.{FileManager, UserCache}
 import di.AppModule
 import info.mukel.telegrambot4s.api.{Polling, TelegramBot}
@@ -29,26 +30,15 @@ object Bot extends TelegramBot with Polling with MyCommands with AppModule{
 
   def downloadUrl(token:String, dwnPath: String) = s"https://api.telegram.org/file/bot$token/$dwnPath"
 
-  val fileManager: FileManager = inject[FileManager]
-  val userCache: UserCache = inject[UserCache]
-  val effects = List(
-    "Darth Vader", "Batman",
-    "Small man", "Bane",
-    "heh",
-    "Darth Vader", "Batman",
-    "Small man", "Bane",
-    "heh",
-    "Darth Vader", "Batman",
-    "Small man", "Bane",
-    "heh",
-    "Darth Vader", "Batman",
-    "Small man", "Bane",
-    "heh"
-  )
+  val fileManager =  inject[FileManager]
+  val userCache =    inject[UserCache]
+  val voiceChanger = inject[VoiceChanger]
+
+  val effects = voiceChanger.effects
 
   val keyboard = {
     val size = Math.sqrt(effects.size).toInt
-    effects.map(KeyboardButton(_)).grouped(size).toList
+    effects.map(ef => KeyboardButton(ef.name)).grouped(size).toList
   }
 
 
@@ -62,8 +52,8 @@ object Bot extends TelegramBot with Polling with MyCommands with AppModule{
     api.request(SendMessage(Left(msg.chat.id), "Select audio effect", replyMarkup = Some(markup)))
   }
 
-  effects.foreach{ effectKey =>
-    on(effectKey){ msg => _ =>
+  effects.foreach{ effect =>
+    on(effect.name){ msg => _ =>
 //      val a = saveUserAudioEffect(msg.chat.id, effectKey)
 
     }
@@ -81,9 +71,11 @@ object Bot extends TelegramBot with Polling with MyCommands with AppModule{
 
     val file: Future[_] = botFile.flatMap{ file =>
       file.filePath.map {
-        path => fileManager.downloadFile(downloadUrl(token, path), "file.ogg")
+        path => fileManager.downloadFile(downloadUrl(token, path), file.fileId+".ogg")
       }.getOrElse(Future.failed(new Exception))
     }
+
+//    file.flatMap()
 
 
   }
