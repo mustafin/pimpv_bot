@@ -25,7 +25,7 @@ trait TarsosVoiceChanger extends VoiceChanger[TarsosVoiceEffect]{
       val dispatcher: AudioDispatcher = AudioDispatcherFactory.fromFile(file, defaultBufferSize, defaultOverlap)
       effect.processors.foreach(dispatcher.addAudioProcessor)
       dispatcher.run()
-
+      file
 //      Process("").#<()
     }
   }

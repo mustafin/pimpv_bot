@@ -1,4 +1,5 @@
-import java.io.File
+import java.io.{FileInputStream, File}
+import java.util.Properties
 
 import data.{FileManager, UserCache}
 import di.AppModule
@@ -14,9 +15,22 @@ import scala.util.Failure
   */
 object Bot extends TelegramBot with Polling with MyCommands with AppModule{
 
+  val token =
+    try {
+      val prop = new Properties()
+      prop.load(new FileInputStream("config.properties"))
+      prop.getProperty("bot.token")
+
+    } catch { case e: Exception =>
+      e.printStackTrace()
+      sys.exit(1)
+    }
+
+
+  def downloadUrl(token:String, dwnPath: String) = s"https://api.telegram.org/file/bot$token/$dwnPath"
+
   val fileManager: FileManager = inject[FileManager]
   val userCache: UserCache = inject[UserCache]
-
   val effects = List(
     "Darth Vader", "Batman",
     "Small man", "Bane",
@@ -36,10 +50,6 @@ object Bot extends TelegramBot with Polling with MyCommands with AppModule{
     val size = Math.sqrt(effects.size).toInt
     effects.map(KeyboardButton(_)).grouped(size).toList
   }
-
-  def token = "token"
-
-  def downloadUrl(token:String, dwnPath: String) = s"https://api.telegram.org/file/bot$token/$dwnPath"
 
 
   on("/hello") { implicit msg => _ =>

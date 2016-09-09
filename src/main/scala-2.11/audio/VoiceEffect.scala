@@ -9,6 +9,8 @@ trait VoiceEffect{
 
   type T
 
+  val name: String
+
   def processors:Seq[T]
 
 }

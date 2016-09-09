@@ -1,6 +1,7 @@
-import java.io.IOException
-import javax.sound.sampled.{LineUnavailableException, UnsupportedAudioFileException}
+import java.io.{ByteArrayOutputStream, IOException}
+import javax.sound.sampled.{AudioFormat, LineUnavailableException, UnsupportedAudioFileException}
 
+import audio.tarsosdsp.OggWriter
 import be.tarsos.dsp
 import be.tarsos.dsp.io.jvm.{AudioDispatcherFactory, AudioPlayer}
 import be.tarsos.dsp.{AudioDispatcher, GainProcessor}
@@ -35,6 +36,33 @@ object Examplee {
 //    val fe: FlangerEffect = new FlangerEffect(0.4, 0.7, sampleRate, 10)
 //    dispatcher.addAudioProcessor(fe)
     dispatcher.addAudioProcessor(new AudioPlayer(dispatcher.getFormat))
+    println(dispatcher.getFormat)
+    val size: Int = dispatcher.getFormat.getFrameSize
+    val rate: Float = dispatcher.getFormat.getFrameRate
+    import scala.sys.process._
+    val proc = Process(s"ffmpeg -i pipe:0 -acodec libopus -f ogg newfile.ogg")
+
+
+    val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
+
+    val writer: OggWriter = new OggWriter(stream, dispatcher.getFormat.getFrameSize)
+    dispatcher.addAudioProcessor(writer)
+
+    dispatcher.run()
+    (proc #> stream).!
+
+//    val io = new ProcessIO(w => {
+//      val writer: OggWriter = new OggWriter(w)
+//      dispatcher.addAudioProcessor(writer)
+//
+//      val t: Thread = new Thread(dispatcher)
+//      t.run()
+//      t.join()
+//      w.close()
+//    }, p=>{}, e=>{println("something")},true)
+
+//    proc run io
+
 //    val t: Thread = new Thread(dispatcher)
 //    t.run()
 //
