@@ -27,7 +27,7 @@ project/plugins/project/
 
 ## File-based project format:
 *.iws
-/src/main/resources/config.properties
+config.properties
 
 ## Plugin-specific files:
 
