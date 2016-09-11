@@ -1,3 +1,5 @@
+package bot
+
 import audio.VoiceChanger
 import com.typesafe.scalalogging.Logger
 import data.{FileManager, UserCache}

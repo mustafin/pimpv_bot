@@ -1,9 +1,7 @@
-import info.mukel.telegrambot4s.api.Commands
-import info.mukel.telegrambot4s.methods.ParseMode._
-import info.mukel.telegrambot4s.methods.SendMessage
-import info.mukel.telegrambot4s.models.{Message, Voice}
+package bot
 
-import scala.concurrent.Future
+import info.mukel.telegrambot4s.api.Commands
+import info.mukel.telegrambot4s.models.Message
 
 /**
   * Created by musta on 2016-08-20.
