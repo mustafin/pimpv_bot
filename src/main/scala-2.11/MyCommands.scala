@@ -14,11 +14,11 @@ trait MyCommands extends Commands{
 
   override def handleMessage(message: Message): Unit = {
     super.handleMessage(message)
-
-    message.voice.foreach(onVoice)
+    println(message)
+    message.voice.foreach(_ => onVoice(message))
   }
 
 
-  def onVoice(voice: Voice): Unit
+  def onVoice(message: Message): Unit
 
 }

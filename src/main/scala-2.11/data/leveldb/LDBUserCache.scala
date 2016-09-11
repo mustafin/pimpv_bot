@@ -2,15 +2,48 @@ package data.leveldb
 
 import data.UserCache
 import data.leveldb.LDBImplicits._
+
+import scala.collection.SortedSet
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 /**
   * Created by musta on 2016-09-05.
   */
 class LDBUserCache extends UserCache{
 
-  val db = new LDBEffectsCache[Long, String]("userEffects")
+  private val db = new LDBCache[String, String]("userEffects")
+  private val effTime = new LDBCache[String, Long]("userEffects")
+//  private val timeQueue = new java.util.TreeMap[Long, String]
 
-  override def setUserEffect(chatId: Long, effectKey: String): Unit = {
 
+  override def setUserEffect(key: String, effectKey: String): Future[Unit] = {
+    Future {
+      db.use{
+        db.put(key, effectKey)
+      }
+    }
   }
+
+  override def getUserEffect(key: String): Option[String] = {
+    db.use{
+      db.get(key)
+    }
+  }
+
+  override def saveUserAudios(key: String, audioNames: String): Future[Unit] = {
+//    Future{
+//      db.use{
+//        db.put(key, audioNames)
+//      }
+//    }
+    ???
+  }
+
+  override def getUserAudios(key: String): Option[String] = {
+    db.use{ db.get(key) }
+    ???
+  }
+
+
 
 }

@@ -5,6 +5,9 @@ import java.io.File
 import audio.{VoiceChanger, VoiceEffect}
 import be.tarsos.dsp.AudioDispatcher
 import be.tarsos.dsp.io.jvm.{AudioDispatcherFactory, WaveformWriter}
+import com.google.common.io.Files
+import com.typesafe.scalalogging.Logger
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, blocking}
@@ -13,44 +16,59 @@ import scala.sys.process._
 /**
   * Created by musta on 2016-08-31.
   */
-class TarsosVoiceChanger extends VoiceChanger{
+class TarsosVoiceChanger extends VoiceChanger {
 
+  private val logger = Logger(LoggerFactory.getLogger(this.getClass))
 
   val defaultBufferSize = 2048
-  val defaultOverlap = defaultBufferSize-256
+  val defaultOverlap = defaultBufferSize - 256
   val defaultSampleRate = 44100
-  def process(input: String, output: String) = s"ffmpeg -i $input -acodec opus $output"
 
-  override def effects: List[VoiceEffect] = List(new BigManEffect(defaultSampleRate,defaultOverlap))
+  def process(input: String, output: String) = s"ffmpeg -y -i $input -acodec opus $output"
+
+  override val effects: List[VoiceEffect] = List(
+    new BigManEffect(defaultSampleRate, defaultBufferSize, defaultOverlap),
+    new HamsterEffect(defaultSampleRate, defaultBufferSize, defaultOverlap),
+    new RobotEffect(defaultSampleRate, defaultBufferSize, defaultOverlap)
+
+  )
 
   override def applyEffect(file: File, effect: VoiceEffect): Future[File] = {
     require(effect.isInstanceOf[TarsosVoiceEffect])
     val tarsosEffect = effect.asInstanceOf[TarsosVoiceEffect] //TODO fix this HACK
 
+    val wavName = changeExtension(file.getName, ".wav")
+    Files.move(file, new File(wavName))
     Future {
-      blocking{
+      blocking {
         //apply voice effect
-        val dispatcher: AudioDispatcher = AudioDispatcherFactory.fromFile(file, defaultBufferSize, defaultOverlap)
-        val ww = new WaveformWriter(dispatcher.getFormat, changeExtension(file.getAbsolutePath, ".wav"))
-
-        tarsosEffect.processors.foreach(dispatcher.addAudioProcessor)
+        logger.debug(s"Processing file: $wavName")
+        val dispatcher: AudioDispatcher = AudioDispatcherFactory.fromPipe(wavName, defaultSampleRate,
+                                                                                   defaultBufferSize,
+                                                                                   defaultOverlap)
+        //TODO namelogic
+        val ww = new WaveformWriter(dispatcher.getFormat, wavName)
+        tarsosEffect.processors.foreach(effect => dispatcher.addAudioProcessor(effect()))
         dispatcher.addAudioProcessor(ww)
         dispatcher.run()
         //encode result to ogg
-        encodeOgg(file)
+
+        encodeOgg(new File(wavName))
       }
     }
   }
 
-  private def encodeOgg(file: File): File ={
-    val newFileName = changeExtension(file.getAbsolutePath, ".ogg")
-    val proc = Process(process(file.getAbsolutePath, newFileName))
-    proc.run()
+  protected def encodeOgg(file: File): File = {
+    logger.debug(s"Encoding result file: ${file.getName} with opus ogg")
+    val newFileName = changeExtension(file.getName, ".ogg")
+    val proc = Process(process(file.getName, newFileName))
+    proc.!
     val result = new File(newFileName)
+    file.delete()
     result
   }
 
-  private def changeExtension(name: String, postfix: String): String ={
+  protected def changeExtension(name: String, postfix: String): String = {
     val r = "\\.[^.]*$".r
     r.findFirstIn(name) match {
       case Some(_) => r.replaceAllIn(name, postfix)
@@ -58,7 +76,6 @@ class TarsosVoiceChanger extends VoiceChanger{
     }
 
   }
-
 
 
 }

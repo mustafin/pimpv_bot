@@ -11,7 +11,7 @@ import java.io._
   * there will be errors in parsing
   *
   */
-class LDBEffectsCache[K,V](dbName: String)(
+class LDBCache[K,V](dbName: String)(
   implicit val keyParser: ByteParser[K],
   implicit val valueParser: ByteParser[V]
                                             ) extends scala.collection.mutable.Map[K, V] with Closeable{
@@ -65,7 +65,7 @@ class LDBEffectsCache[K,V](dbName: String)(
     }
   }
 
-  def use(block: => Unit): Unit = {
+  def use[T](block: => T): T = {
     database = factory.open(new File(dbName), options)
     try     block
     finally this.close()

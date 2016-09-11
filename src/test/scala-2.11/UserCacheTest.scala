@@ -1,4 +1,4 @@
-import data.leveldb.LDBEffectsCache
+import data.leveldb.LDBCache
 import org.scalatest.FunSuite
 import data.leveldb.LDBImplicits._
 
@@ -9,7 +9,7 @@ class UserCacheTest extends FunSuite{
 
 
   test("LDB") {
-    val map = new LDBEffectsCache[Long, String]("example")
+    val map = new LDBCache[Long, String]("example")
     map.use{
       map += (1L -> "Murat")
       map += (3L -> "Murat")

@@ -8,6 +8,6 @@ import scala.concurrent.Future
   */
 trait VoiceChanger{
 
-  def applyEffect(file: File, effect: VoiceEffect): Future[File]
+  def applyEffect(file: File, effect: VoiceEffect = effects.head): Future[File]
   def effects: List[VoiceEffect]
 }

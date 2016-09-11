@@ -1,31 +1,32 @@
-import java.io.{File, FileInputStream}
-import java.util.Properties
-
-import audio.{VoiceChanger, VoiceEffect}
+import audio.VoiceChanger
+import com.typesafe.scalalogging.Logger
 import data.{FileManager, UserCache}
 import di.AppModule
 import info.mukel.telegrambot4s.api.{Polling, TelegramBot}
-import info.mukel.telegrambot4s.methods.{GetFile, SendMessage}
-import info.mukel.telegrambot4s.models.{KeyboardButton, ReplyKeyboardMarkup, Voice, File => BotFile}
+import info.mukel.telegrambot4s.methods.{GetFile, SendMessage, SendVoice}
+import info.mukel.telegrambot4s.models.{InputFile, KeyboardButton, Message, ReplyKeyboardHide, ReplyKeyboardMarkup, File => BotFile}
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
-import scala.util.Failure
+import scala.util.{Failure, Success}
 
 /**
   * Created by musta on 2016-08-18.
   */
 object Bot extends TelegramBot with Polling with MyCommands with AppModule{
 
-  val token =
-    try {
-      val prop = new Properties()
-      prop.load(new FileInputStream("config.properties"))
-      prop.getProperty("bot.token")
+  private val logger = Logger(LoggerFactory.getLogger(this.getClass))
 
-    } catch { case e: Exception =>
-      e.printStackTrace()
-      sys.exit(1)
-    }
+  def token = "258718697:AAGjj8TAwq3R_NJRwkbEIXw-IeEmrctC0_Y"
+//    try {
+//      val prop = new Properties()
+//      prop.load(getClass.getResourceAsStream("config.properties"))
+//      prop.getProperty("bot.token")
+//
+//    } catch { case e: Exception =>
+//      e.printStackTrace()
+//      sys.exit(1)
+//    }
 
 
   def downloadUrl(token:String, dwnPath: String) = s"https://api.telegram.org/file/bot$token/$dwnPath"
@@ -42,43 +43,63 @@ object Bot extends TelegramBot with Polling with MyCommands with AppModule{
   }
 
 
-  on("/hello") { implicit msg => _ =>
 
-    reply("Now send me a file")
-  }
-
-  on("/start") { implicit msg => _ =>
+  on("/sv") { implicit msg => _ =>
     val markup = ReplyKeyboardMarkup(keyboard)
     api.request(SendMessage(Left(msg.chat.id), "Select audio effect", replyMarkup = Some(markup)))
   }
 
   effects.foreach{ effect =>
-    on(effect.name){ msg => _ =>
-//      val a = saveUserAudioEffect(msg.chat.id, effectKey)
+    on(effect.name.toLowerCase){ msg => _ =>
 
+      userCache.setUserEffect(msg.sender.toString, effect.name)
+
+      api.request(
+        SendMessage(Left(msg.chat.id), effect.name+" is set",
+        replyMarkup = Some(ReplyKeyboardHide(hideKeyboard = true)))
+      )
     }
   }
 
-  private def saveUserAudioEffect(chatId: Long, effectKey: String)(userCache: UserCache):  Unit ={
-    userCache.setUserEffect(chatId, effectKey)
 
-  }
+  override def onVoice(message: Message): Unit = {
+    val effect = for{
+      efName <- userCache.getUserEffect(message.chat.id.toString)
+      ef     <- effects.find(_.name == efName)
+    } yield ef
 
-  override def onVoice(voice: Voice): Unit = {
+    if(effect.isEmpty) {
+      reply("No voice effect specified")(message)
+      return
+    }
 
+    val voice = message.voice.get
     val botFile: Future[BotFile] = api.request(GetFile(voice.fileId))
-    println(downloadUrl(token, voice.fileId))
 
-    val file: Future[_] = botFile.flatMap{ file =>
+    val file = botFile.flatMap{ file =>
       file.filePath.map {
         path => fileManager.downloadFile(downloadUrl(token, path), file.fileId+".ogg")
       }.getOrElse(Future.failed(new Exception))
     }
+    file.onFailure{case f=>f.printStackTrace()}
 
-//    file.flatMap()
 
-
+    file.flatMap(target => voiceChanger.applyEffect(target, effect.get)).onComplete{
+      case Success(result) =>
+        api.request(
+          SendVoice(
+            Left(message.chat.id),
+            Left(InputFile.FromFile(result))
+          )
+        ).onComplete{ _ => //TODO: cache 10 resent files
+          result.delete()
+        }
+      case Failure(ex) => ex.printStackTrace()
+    }
   }
 
+  private def saveUserVoiceMessage(): Unit ={
+
+  }
 
 }
