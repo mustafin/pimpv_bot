@@ -5,7 +5,7 @@ import com.typesafe.scalalogging.Logger
 import data.{FileManager, UserCache}
 import di.AppModule
 import info.mukel.telegrambot4s.api.{Polling, TelegramBot, Webhook}
-import info.mukel.telegrambot4s.methods.{GetFile, SendMessage, SendVoice}
+import info.mukel.telegrambot4s.methods.{GetFile, SendMessage, SendVoice, SetWebhook}
 import info.mukel.telegrambot4s.models.{InputFile, KeyboardButton, Message, ReplyKeyboardHide, ReplyKeyboardMarkup, File => BotFile}
 import org.slf4j.LoggerFactory
 
@@ -29,7 +29,6 @@ object Bot extends TelegramBot with Webhook with MyCommands with AppModule{
 //      e.printStackTrace()
 //      sys.exit(1)
 //    }
-
 
   def downloadUrl(token:String, dwnPath: String) = s"https://api.telegram.org/file/bot$token/$dwnPath"
 
