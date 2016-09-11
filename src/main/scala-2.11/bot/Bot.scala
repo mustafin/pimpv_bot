@@ -4,7 +4,7 @@ import audio.VoiceChanger
 import com.typesafe.scalalogging.Logger
 import data.{FileManager, UserCache}
 import di.AppModule
-import info.mukel.telegrambot4s.api.{Polling, TelegramBot}
+import info.mukel.telegrambot4s.api.{Polling, TelegramBot, Webhook}
 import info.mukel.telegrambot4s.methods.{GetFile, SendMessage, SendVoice}
 import info.mukel.telegrambot4s.models.{InputFile, KeyboardButton, Message, ReplyKeyboardHide, ReplyKeyboardMarkup, File => BotFile}
 import org.slf4j.LoggerFactory
@@ -15,7 +15,7 @@ import scala.util.{Failure, Success}
 /**
   * Created by musta on 2016-08-18.
   */
-object Bot extends TelegramBot with Polling with MyCommands with AppModule{
+object Bot extends TelegramBot with Webhook with MyCommands with AppModule{
 
   private val logger = Logger(LoggerFactory.getLogger(this.getClass))
 
@@ -104,4 +104,7 @@ object Bot extends TelegramBot with Polling with MyCommands with AppModule{
 
   }
 
+  override def port: Int = 80
+
+  override def webhookUrl: String = "https://enigmatic-reaches-38677.herokuapp.com/"
 }
