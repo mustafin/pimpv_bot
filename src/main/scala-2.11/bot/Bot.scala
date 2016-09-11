@@ -103,7 +103,7 @@ object Bot extends TelegramBot with Webhook with MyCommands with AppModule{
 
   }
 
-  override def port: Int = 80
+  override def port: Int = System.getenv("PORT").toInt
 
   override def webhookUrl: String = "https://enigmatic-reaches-38677.herokuapp.com/"
 }
