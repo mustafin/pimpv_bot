@@ -2,7 +2,7 @@ package bot
 
 import java.util.Properties
 
-import audio.VoiceChanger
+import audio.{VoiceChanger, VoiceEffect}
 import com.typesafe.scalalogging.Logger
 import data.{FileManager, UserCache}
 import di.AppModule

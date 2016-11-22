@@ -18,6 +18,8 @@ import scala.sys.process._
   */
 class TarsosVoiceChanger extends VoiceChanger {
 
+  override type T = TarsosVoiceEffect
+
   private val logger = Logger(LoggerFactory.getLogger(this.getClass))
 
   val defaultBufferSize = 2048
@@ -26,16 +28,13 @@ class TarsosVoiceChanger extends VoiceChanger {
 
   def process(input: String, output: String) = s"ffmpeg -y -i $input -acodec opus $output"
 
-  override val effects: List[VoiceEffect] = List(
+  override val effects: List[TarsosVoiceEffect] = List(
     new BigManEffect(defaultSampleRate, defaultBufferSize, defaultOverlap),
     new HamsterEffect(defaultSampleRate, defaultBufferSize, defaultOverlap),
     new RobotEffect(defaultSampleRate, defaultBufferSize, defaultOverlap)
-
   )
 
-  override def applyEffect(file: File, effect: VoiceEffect): Future[File] = {
-    require(effect.isInstanceOf[TarsosVoiceEffect])
-    val tarsosEffect = effect.asInstanceOf[TarsosVoiceEffect] //TODO fix this HACK
+  override def applyEffect(file: File, tarsosEffect: TarsosVoiceEffect): Future[File] = {
 
     val wavName = changeExtension(file.getCanonicalPath, ".wav")
     Files.move(file, new File(wavName))
