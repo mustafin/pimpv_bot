@@ -12,7 +12,6 @@ trait MyCommands extends Commands{
 
   override def handleMessage(message: Message): Unit = {
     super.handleMessage(message)
-    println(message)
     message.voice.foreach(_ => onVoice(message))
   }
 

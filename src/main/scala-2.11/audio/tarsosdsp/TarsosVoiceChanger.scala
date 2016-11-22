@@ -37,7 +37,7 @@ class TarsosVoiceChanger extends VoiceChanger {
     require(effect.isInstanceOf[TarsosVoiceEffect])
     val tarsosEffect = effect.asInstanceOf[TarsosVoiceEffect] //TODO fix this HACK
 
-    val wavName = changeExtension(file.getName, ".wav")
+    val wavName = changeExtension(file.getCanonicalPath, ".wav")
     Files.move(file, new File(wavName))
     Future {
       blocking {

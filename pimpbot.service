@@ -1,0 +1,10 @@
+[Unit]
+Description=Pimp bot service
+
+[Service]
+User=murat
+ExecStart=/home/murat/apps/bot-1.0/bin/bot -J-Xms12m -J-Xmx48m -J-MetaspaceSize=16m -J-Xss1m
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target

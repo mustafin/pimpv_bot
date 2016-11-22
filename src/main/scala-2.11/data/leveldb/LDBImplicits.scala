@@ -1,7 +1,5 @@
 package data.leveldb
 
-import java.nio.ByteBuffer
-
 import org.iq80.leveldb.impl.Iq80DBFactory
 
 /**
