@@ -45,13 +45,12 @@ class TarsosVoiceChanger extends VoiceChanger {
         val dispatcher: AudioDispatcher = AudioDispatcherFactory.fromPipe(wavName, defaultSampleRate,
                                                                                    defaultBufferSize,
                                                                                    defaultOverlap)
-        //TODO namelogic
         val ww = new WaveformWriter(dispatcher.getFormat, wavName)
         tarsosEffect.processors.foreach(effect => dispatcher.addAudioProcessor(effect()))
         dispatcher.addAudioProcessor(ww)
         dispatcher.run()
-        //encode result to ogg
 
+        //encode result to ogg
         encodeOgg(new File(wavName))
       }
     }
