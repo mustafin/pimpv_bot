@@ -11,7 +11,4 @@ trait FileManager {
 
   def downloadFile(url: String, newFileName: String): Future[File]
 
-
-
-
 }

@@ -1,7 +1,5 @@
 package data.leveldb
 
-import org.iq80.leveldb._
-import org.iq80.leveldb.impl.Iq80DBFactory._
 import java.io._
 
 /**
@@ -11,17 +9,17 @@ import java.io._
   * there will be errors in parsing
   *
   */
-class LDBCache[K,V](dbName: String)(
+class LDBCache[K, V](dbName: String)(
   implicit val keyParser: ByteParser[K],
   implicit val valueParser: ByteParser[V]
-                                            ) extends scala.collection.mutable.Map[K, V] with Closeable{
+) extends scala.collection.mutable.Map[K, V] with Closeable {
 
   private val options: Options = new Options().createIfMissing(true)
 
   private var database: DB = _
 
   @throws(classOf[IOException])
-  def += (kv: (K, V)): this.type = kv match {
+  def +=(kv: (K, V)): this.type = kv match {
     case (k, v) =>
       database.put(keyParser.bytes(k), valueParser.bytes(v))
       this
@@ -36,14 +34,14 @@ class LDBCache[K,V](dbName: String)(
   @throws(classOf[IOException])
   override def get(key: K): Option[V] = {
     val b = database.get(keyParser.bytes(key))
-    if (b!= null) {
+    if (b != null) {
       Some(valueParser.toType(b))
-    }else{
+    } else {
       None
     }
   }
 
-  override def iterator: Iterator[(K, V)] = new Iterator[(K, V)]{
+  override def iterator: Iterator[(K, V)] = new Iterator[(K, V)] {
     val iter = database.iterator()
     iter.seekToFirst()
 
@@ -57,17 +55,15 @@ class LDBCache[K,V](dbName: String)(
 
   override def close(): Unit = database.close()
 
-  def withBatchUpdate(action: (WriteBatch) => Unit): Unit = {
-    use {
-      val batch = database.createWriteBatch()
-      action(batch)
-      database.write(batch)
-    }
+  def withBatchUpdate(action: (WriteBatch) => Unit): Unit = use {
+    val batch = database.createWriteBatch()
+    action(batch)
+    database.write(batch)
   }
 
   def use[T](block: => T): T = {
     database = factory.open(new File(dbName), options)
-    try     block
+    try block
     finally this.close()
   }
 

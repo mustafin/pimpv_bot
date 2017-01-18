@@ -1,5 +1,4 @@
 package audio.tarsosdsp
-import be.tarsos.dsp.AudioProcessor
 
 /**
   * Created by musta on 2016-09-11.

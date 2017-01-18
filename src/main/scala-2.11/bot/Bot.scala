@@ -18,21 +18,7 @@ import scala.util.{Failure, Success}
   * Created by musta on 2016-08-18.
   */
 object Bot extends TelegramBot with Polling with MyCommands with AppModule {
-
   private val logger = Logger(LoggerFactory.getLogger(this.getClass))
-
-  def token = try {
-    val prop = new Properties()
-    prop.load(getClass.getResourceAsStream("/config.properties"))
-    prop.getProperty("bot.token")
-
-  } catch {
-    case e: Exception =>
-      e.printStackTrace()
-      sys.exit(1)
-  }
-
-  def downloadUrl(token: String, dwnPath: String) = s"https://api.telegram.org/file/bot$token/$dwnPath"
 
   val fileManager = inject[FileManager]
   val userCache = inject[UserCache]
@@ -45,6 +31,18 @@ object Bot extends TelegramBot with Polling with MyCommands with AppModule {
     effects.map(ef => KeyboardButton(ef.name)).grouped(size).toList
   }
 
+
+  lazy val token = try {
+    val prop = new Properties()
+    prop.load(getClass.getResourceAsStream("/config.properties"))
+    prop.getProperty("bot.token")
+  } catch {
+    case e: Exception =>
+      e.printStackTrace()
+      sys.exit(1)
+  }
+
+  def downloadUrl(token: String, dwnPath: String) = s"https://api.telegram.org/file/bot$token/$dwnPath"
 
   on("/sv") { implicit msg => _ =>
     val markup = ReplyKeyboardMarkup(keyboard)
@@ -74,13 +72,13 @@ object Bot extends TelegramBot with Polling with MyCommands with AppModule {
     logger.debug(s"Requesting file id is ${voice.fileId}")
 
     val botFile: Future[BotFile] = api request GetFile(voice.fileId)
+
     val file = botFile flatMap { file =>
       file.filePath.map {
         path => fileManager.downloadFile(downloadUrl(token, path), file.fileId + ".ogg")
       }.getOrElse(Future.failed(new Exception))
     }
     file.onFailure { case f => logger.error("Failed to download", f) }
-
 
     file.flatMap(voiceChanger.applyEffect(_, effect.get)).onComplete {
       case Success(result) =>
@@ -90,7 +88,7 @@ object Bot extends TelegramBot with Polling with MyCommands with AppModule {
         ) onComplete { _ => //TODO: cache 10 resent files
           result.delete()
         }
-      case Failure(ex) => ex.printStackTrace()
+      case Failure(ex) => logger.error(s"Failed to apply effect with message ${ex.getMessage}", ex)
     }
   }
 

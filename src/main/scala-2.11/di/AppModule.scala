@@ -15,5 +15,4 @@ trait AppModule extends Module{
   bind[UserCache] to new LDBUserCache
   bind[VoiceChanger] to new TarsosVoiceChanger
 
-
 }
