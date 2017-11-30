@@ -1,14 +1,3 @@
-import java.io.{ByteArrayOutputStream, File, IOException}
-import javax.sound.sampled.{AudioFormat, AudioSystem, LineUnavailableException, UnsupportedAudioFileException}
-
-import audio.tarsosdsp.{OggWriter, RobotizeProcessor}
-import be.tarsos.dsp
-import be.tarsos.dsp.effects.DelayEffect
-import be.tarsos.dsp.io.jvm.{AudioDispatcherFactory, AudioPlayer, WaveformWriter}
-import be.tarsos.dsp.{AudioDispatcher, GainProcessor, PitchShifter}
-
-import scala.concurrent.Future
-
 /**
   * Created by musta on 2016-08-17.
   */
