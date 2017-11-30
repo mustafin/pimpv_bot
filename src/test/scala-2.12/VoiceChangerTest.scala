@@ -1,10 +1,8 @@
 import java.io.File
 
 import audio.tarsosdsp.TarsosVoiceChanger
-import data.leveldb.LDBCache
 import di.AppModule
 import org.scalatest.FunSuite
-import data.leveldb.LDBImplicits._
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global

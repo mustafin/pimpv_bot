@@ -2,6 +2,13 @@ package audio.tarsosdsp
 
 import java.io.File
 
+import audio.{VoiceChanger, VoiceEffect}
+import be.tarsos.dsp.AudioDispatcher
+import be.tarsos.dsp.io.jvm.{AudioDispatcherFactory, WaveformWriter}
+import com.google.common.io.Files
+import com.typesafe.scalalogging.Logger
+import org.slf4j.LoggerFactory
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, blocking}
 import scala.sys.process._
@@ -33,7 +40,7 @@ class TarsosVoiceChanger extends VoiceChanger {
     Future( blocking { applyToDispatcher(tarsosEffect, wavName) } )
   }
 
-  private def applyToDispatcher(tarsosEffect: TarsosVoiceEffect, wavName: String): Unit = {
+  private def applyToDispatcher(tarsosEffect: TarsosVoiceEffect, wavName: String): File = {
     //apply voice effect
     logger.debug(s"Processing file: $wavName")
     val dispatcher: AudioDispatcher = AudioDispatcherFactory.fromPipe(wavName, defaultSampleRate,

@@ -1,5 +1,8 @@
 package audio.tarsosdsp
 
+import be.tarsos.dsp.effects.DelayEffect
+import be.tarsos.dsp.{AudioProcessor, PitchShifter}
+
 /**
   * Created by musta on 2016-09-08.
   */

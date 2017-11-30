@@ -8,7 +8,7 @@ import data.{FileManager, UserCache}
 import di.AppModule
 import info.mukel.telegrambot4s.api.{Polling, TelegramBot}
 import info.mukel.telegrambot4s.methods.{GetFile, SendMessage, SendVoice}
-import info.mukel.telegrambot4s.models.{InputFile, KeyboardButton, Message, ReplyKeyboardHide, ReplyKeyboardMarkup, File => BotFile}
+import info.mukel.telegrambot4s.models.{InputFile, KeyboardButton, Message, ReplyKeyboardRemove, ReplyKeyboardMarkup, File => BotFile}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
@@ -18,7 +18,6 @@ import scala.util.{Failure, Success}
   * Created by musta on 2016-08-18.
   */
 object Bot extends TelegramBot with Polling with MyCommands with AppModule {
-  private val logger = Logger(LoggerFactory.getLogger(this.getClass))
 
   val fileManager = inject[FileManager]
   val userCache = inject[UserCache]
@@ -44,18 +43,18 @@ object Bot extends TelegramBot with Polling with MyCommands with AppModule {
 
   def downloadUrl(token: String, dwnPath: String) = s"https://api.telegram.org/file/bot$token/$dwnPath"
 
-  on("/sv") { implicit msg => _ =>
+  onCommand("/sv") { implicit msg =>
     val markup = ReplyKeyboardMarkup(keyboard)
-    api.request(SendMessage(Left(msg.chat.id), "Select audio effect", replyMarkup = Some(markup)))
+    request(SendMessage(msg.chat.id, "Select audio effect", replyMarkup = Some(markup)))
   }
 
   effects.foreach { effect =>
-    on(effect.name.toLowerCase) { msg => _ =>
+    onCommand(effect.name.toLowerCase) { msg =>
 
-      userCache.setUserEffect(msg.sender.toString, effect.name)
+      userCache.setUserEffect(msg.source.toString, effect.name)
 
-      api request SendMessage(Left(msg.chat.id), effect.name + " is set",
-                          replyMarkup = Some(ReplyKeyboardHide(hideKeyboard = true)))
+      request(SendMessage(msg.chat.id, effect.name + " is set",
+        replyMarkup = Some(ReplyKeyboardRemove(removeKeyboard = true))))
     }
   }
 
@@ -71,7 +70,7 @@ object Bot extends TelegramBot with Polling with MyCommands with AppModule {
 
     logger.debug(s"Requesting file id is ${voice.fileId}")
 
-    val botFile: Future[BotFile] = api request GetFile(voice.fileId)
+    val botFile: Future[BotFile] = request(GetFile(voice.fileId))
 
     val file = botFile flatMap { file =>
       file.filePath.map {
@@ -82,10 +81,10 @@ object Bot extends TelegramBot with Polling with MyCommands with AppModule {
 
     file.flatMap(voiceChanger.applyEffect(_, effect.get)).onComplete {
       case Success(result) =>
-        api request SendVoice(
-          Left(message.chat.id),
-          Left(InputFile.FromFile(result))
-        ) onComplete { _ => //TODO: cache 10 resent files
+        request(SendVoice(
+          message.chat.id,
+          InputFile(result.toPath)
+        )) onComplete { _ => //TODO: cache 10 resent files
           result.delete()
         }
       case Failure(ex) => logger.error(s"Failed to apply effect with message ${ex.getMessage}", ex)

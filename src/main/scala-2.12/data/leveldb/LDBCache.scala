@@ -2,6 +2,9 @@ package data.leveldb
 
 import java.io._
 
+import org.iq80.leveldb._
+import org.iq80.leveldb.impl.Iq80DBFactory.factory
+
 /**
   * Created by musta on 2016-08-31.
   * LDBEffectsCache is abstraction of levelDB over a mutable.Map[K,V]
@@ -9,47 +12,41 @@ import java.io._
   * there will be errors in parsing
   *
   */
-class LDBCache[K, V](dbName: String)(
-  implicit val keyParser: ByteParser[K],
-  implicit val valueParser: ByteParser[V]
-) extends scala.collection.mutable.Map[K, V] with Closeable {
+class LDBCache[K](dbName: String)(implicit keyParser: ByteParser[K]) extends Closeable {
 
   private val options: Options = new Options().createIfMissing(true)
 
   private var database: DB = _
 
+  def parser[T](implicit tParser: ByteParser[T]): ByteParser[T] = tParser
+
   @throws(classOf[IOException])
-  def +=(kv: (K, V)): this.type = kv match {
-    case (k, v) =>
-      database.put(keyParser.bytes(k), valueParser.bytes(v))
-      this
+  def put[V: ByteParser](k: K, v: V): this.type = {
+    database.put(keyParser.bytes(k), parser[V].bytes(v))
+    this
   }
 
   @throws(classOf[IOException])
-  def -=(key: K): this.type = {
+  def delete(key: K): this.type = {
     database.delete(keyParser.bytes(key))
     this
   }
 
   @throws(classOf[IOException])
-  override def get(key: K): Option[V] = {
+  def get[V: ByteParser](key: K): Option[V] = {
     val b = database.get(keyParser.bytes(key))
-    if (b != null) {
-      Some(valueParser.toType(b))
-    } else {
-      None
-    }
+    Option(b).map(parser[V].toType)
   }
 
-  override def iterator: Iterator[(K, V)] = new Iterator[(K, V)] {
+  def iterator: Iterator[(K, Array[Byte])] = new Iterator[(K, Array[Byte])] {
     val iter = database.iterator()
     iter.seekToFirst()
 
     override def hasNext: Boolean = iter.hasNext
 
-    override def next(): (K, V) = {
+    override def next(): (K, Array[Byte]) = {
       val entry = iter.next()
-      (keyParser.toType(entry.getKey), valueParser.toType(entry.getValue))
+      (keyParser.toType(entry.getKey), entry.getValue)
     }
   }
 

@@ -1,5 +1,7 @@
 package audio.tarsosdsp
 
+import be.tarsos.dsp.{AudioProcessor, GainProcessor, PitchShifter}
+
 /**
   * Created by musta on 2016-09-11.
   */

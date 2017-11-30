@@ -1,7 +1,6 @@
 package data.leveldb
 
 import data.UserCache
-import data.leveldb.LDBImplicits._
 
 import scala.collection.SortedSet
 import scala.concurrent.Future
@@ -11,8 +10,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
   */
 class LDBUserCache extends UserCache{
 
-  private val db = new LDBCache[String, String]("userEffects")
-  private val effTime = new LDBCache[String, Long]("userEffects")
+  private val db = new LDBCache[String]("userEffects")
+  private val effTime = new LDBCache[String]("userEffects")
 //  private val timeQueue = new java.util.TreeMap[Long, String]
 
 
@@ -26,7 +25,7 @@ class LDBUserCache extends UserCache{
 
   override def getUserEffect(key: String): Option[String] = {
     db.use{
-      db.get(key)
+      db.get[String](key)
     }
   }
 
@@ -40,7 +39,7 @@ class LDBUserCache extends UserCache{
   }
 
   override def getUserAudios(key: String): Option[String] = {
-    db.use{ db.get(key) }
+    db.use{ db.get[String](key) }
     ???
   }
 

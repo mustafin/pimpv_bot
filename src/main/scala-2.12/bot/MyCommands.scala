@@ -1,6 +1,6 @@
 package bot
 
-import info.mukel.telegrambot4s.api.Commands
+import info.mukel.telegrambot4s.api.declarative.Commands
 import info.mukel.telegrambot4s.models.Message
 
 /**
@@ -9,9 +9,8 @@ import info.mukel.telegrambot4s.models.Message
 trait MyCommands extends Commands{
 
 
-
-  override def handleMessage(message: Message): Unit = {
-    super.handleMessage(message)
+  //TODO Check
+  def handleMessage(message: Message): Unit = {
     message.voice.foreach(_ => onVoice(message))
   }
 
