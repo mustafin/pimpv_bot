@@ -5,6 +5,7 @@ import java.io.File
 import audio.{VoiceChanger, VoiceEffect}
 import be.tarsos.dsp.AudioDispatcher
 import be.tarsos.dsp.io.jvm.{AudioDispatcherFactory, WaveformWriter}
+import bot.Logging
 import com.google.common.io.Files
 import com.typesafe.scalalogging.Logger
 import org.slf4j.LoggerFactory
@@ -16,11 +17,9 @@ import scala.sys.process._
 /**
   * Created by musta on 2016-08-31.
   */
-class TarsosVoiceChanger extends VoiceChanger {
+class TarsosVoiceChanger extends VoiceChanger with Logging {
 
   override type T = TarsosVoiceEffect
-
-  private val logger = Logger(LoggerFactory.getLogger(this.getClass))
 
   private val defaultBufferSize = 2048
   private val defaultOverlap = defaultBufferSize - 256
@@ -42,7 +41,7 @@ class TarsosVoiceChanger extends VoiceChanger {
 
   private def applyToDispatcher(tarsosEffect: TarsosVoiceEffect, wavName: String): File = {
     //apply voice effect
-    logger.debug(s"Processing file: $wavName")
+    log.debug(s"Processing file: $wavName")
     val dispatcher: AudioDispatcher = AudioDispatcherFactory.fromPipe(wavName, defaultSampleRate,
       defaultBufferSize,
       defaultOverlap)
@@ -56,7 +55,7 @@ class TarsosVoiceChanger extends VoiceChanger {
   }
 
   protected def encodeOgg(file: File): File = {
-    logger.debug(s"Encoding result file: ${file.getName} with opus ogg")
+    log.debug(s"Encoding result file: ${file.getName} with opus ogg")
     val newFileName = changeExtension(file.getName, ".ogg")
     val proc = Process(process(file.getName, newFileName))
     proc.!

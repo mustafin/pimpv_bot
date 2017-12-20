@@ -17,7 +17,7 @@ import scala.util.{Failure, Success}
 /**
   * Created by musta on 2016-08-18.
   */
-object Bot extends TelegramBot with Polling with MyCommands with AppModule {
+object Bot extends TelegramBot with Polling with MyCommands with AppModule with Logging {
 
   val fileManager = inject[FileManager]
   val userCache = inject[UserCache]
@@ -38,6 +38,7 @@ object Bot extends TelegramBot with Polling with MyCommands with AppModule {
   } catch {
     case e: Exception =>
       e.printStackTrace()
+      log.error("You should add bot.token key in config.properties")
       sys.exit(1)
   }
 
