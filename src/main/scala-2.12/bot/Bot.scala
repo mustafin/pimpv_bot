@@ -1,13 +1,12 @@
 package bot
 
-import java.util.Properties
-
 import audio.VoiceChanger
 import data.{FileManager, UserCache}
 import di.AppModule
-import info.mukel.telegrambot4s.api.TelegramBot
-import info.mukel.telegrambot4s.methods.{GetFile, SendMessage, SendVoice}
-import info.mukel.telegrambot4s.models.{InputFile, KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, File => BotFile}
+import com.bot4s.telegram.api.{ChatActions, TelegramBot}
+import com.bot4s.telegram.api.declarative.Commands
+import com.bot4s.telegram.methods.{GetFile, SendMessage, SendVoice}
+import com.bot4s.telegram.models.{InputFile, KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, Voice, File => BotFile}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -15,8 +14,14 @@ import scala.util.{Failure, Success}
 /**
   * Created by musta on 2016-08-18.
   */
-//noinspection TypeAnnotation
-trait Bot extends TelegramBot with MyCommands with AppModule with Logging {
+trait Bot extends TelegramBot
+  with Commands
+  with MyCommands
+  with ChatActions
+  with AppModule
+  with Logging {
+
+  log.debug("STARTING BOT")
 
   val fileManager = inject[FileManager]
   val userCache = inject[UserCache]
@@ -29,11 +34,11 @@ trait Bot extends TelegramBot with MyCommands with AppModule with Logging {
     effects.map(ef => KeyboardButton(ef.name)).grouped(size).toList
   }
 
-  def downloadUrl(token: String, dwnPath: String) = s"https://api.telegram.org/file/bot$token/$dwnPath"
+  def downloadUrl(dwnPath: String) = s"https://api.telegram.org/file/bot$token/$dwnPath"
 
   onCommand("/sv") { implicit msg =>
     val markup = ReplyKeyboardMarkup(keyboard)
-    request(SendMessage(msg.chat.id, "Select audio effect", replyMarkup = Some(markup)))
+    request(SendMessage(msg.source, "Select audio effect", replyMarkup = Some(markup)))
   }
 
   effects.foreach { effect =>
@@ -41,44 +46,47 @@ trait Bot extends TelegramBot with MyCommands with AppModule with Logging {
 
       userCache.setUserEffect(msg.source.toString, effect.name)
 
-      request(SendMessage(msg.chat.id, effect.name + " is set",
+      request(SendMessage(msg.source, effect.name + " is set",
         replyMarkup = Some(ReplyKeyboardRemove(removeKeyboard = true))))
     }
   }
 
 
-  override def onVoice(message: Message): Unit = {
-    val effect = findEffect(message.chat.id.toString)
+  override def onVoice(voice: Voice)(implicit message: Message): Unit = {
+    val effect = findEffect(message.source.toString)
 
     if (effect.isEmpty) {
-      reply("No voice effect specified")(message)
+      reply("No voice effect specified")
       return
     }
-    val voice = message.voice.get
 
-    logger.debug(s"Requesting file id is ${voice.fileId}")
+    log.debug(s"Requesting file id is ${voice.fileId}")
 
-    val botFile: Future[BotFile] = request(GetFile(voice.fileId))
+    val botFile = request(GetFile(voice.fileId))
 
     val file = botFile flatMap { file =>
       file.filePath.map {
-        path => fileManager.downloadFile(downloadUrl(token, path), file.fileId + ".ogg")
+        path => fileManager.downloadFile(downloadUrl(path), file.fileId + ".ogg")
       }.getOrElse(Future.failed(new Exception))
     }
     file.onComplete {
       case Failure(f) =>
-        logger.error("Failed to download", f)
+        log.error("Failed to download", f)
+    }
+
+    file.onComplete{
+      case Failure(f) => log.error("Failed to download", f)
     }
 
     file.flatMap(voiceChanger.applyEffect(_, effect.get)).onComplete {
       case Success(result) =>
         request(SendVoice(
-          message.chat.id,
+          message.source,
           InputFile(result.toPath)
         )) onComplete { _ => //TODO: cache 10 resent files
           result.delete()
         }
-      case Failure(ex) => logger.error(s"Failed to apply effect with message ${ex.getMessage}", ex)
+      case Failure(ex) => log.error(s"Failed to apply effect with message ${ex.getMessage}", ex)
     }
   }
 
@@ -90,6 +98,8 @@ trait Bot extends TelegramBot with MyCommands with AppModule with Logging {
   private def saveUserVoiceMessage(): Unit = {
 
   }
+
+  val token: String
 
 
 }

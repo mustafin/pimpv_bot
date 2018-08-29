@@ -1,7 +1,7 @@
 package di
 
+import audio.VoiceChanger
 import audio.tarsosdsp.TarsosVoiceChanger
-import audio.{VoiceChanger, VoiceEffect}
 import data.leveldb.LDBUserCache
 import data.{FileManager, FileManagerImpl, UserCache}
 import scaldi.Module

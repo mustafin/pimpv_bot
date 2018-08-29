@@ -1,9 +1,10 @@
 package bot
 
+import com.bot4s.telegram.api.{AkkaDefaults, RequestHandler, Webhook}
+import com.bot4s.telegram.clients.AkkaHttpClient
 import com.typesafe.config.{Config, ConfigFactory}
-import info.mukel.telegrambot4s.api.Webhook
 
-object WebhookBot extends Webhook with Bot {
+object WebhookBot extends Webhook with Bot with AkkaDefaults {
 
   val config: Config = ConfigFactory.load().atPath("app")
 
@@ -11,5 +12,7 @@ object WebhookBot extends Webhook with Bot {
   val port: Int = config.getInt("port")
 
   val token: String = ConfigFactory.load("token.conf").getString("bot.token")
+
+  override val client: RequestHandler = new AkkaHttpClient(token)
 
 }

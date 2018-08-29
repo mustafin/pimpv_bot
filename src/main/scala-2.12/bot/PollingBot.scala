@@ -1,8 +1,10 @@
 package bot
 
+import com.bot4s.telegram.api.Polling
+import com.bot4s.telegram.clients.ScalajHttpClient
 import com.typesafe.config.ConfigFactory
-import info.mukel.telegrambot4s.api.Polling
 
 object PollingBot extends Polling with Bot {
-  override def token: String = ConfigFactory.load().getString("token")
+  override val token = ConfigFactory.load("token.conf").getString("bot.token")
+  override val client = new ScalajHttpClient(token)
 }
