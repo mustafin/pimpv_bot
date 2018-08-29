@@ -3,13 +3,11 @@ package bot
 import java.util.Properties
 
 import audio.VoiceChanger
-import com.typesafe.scalalogging.Logger
 import data.{FileManager, UserCache}
 import di.AppModule
-import info.mukel.telegrambot4s.api.{Polling, TelegramBot}
+import info.mukel.telegrambot4s.api.TelegramBot
 import info.mukel.telegrambot4s.methods.{GetFile, SendMessage, SendVoice}
-import info.mukel.telegrambot4s.models.{InputFile, KeyboardButton, Message, ReplyKeyboardRemove, ReplyKeyboardMarkup, File => BotFile}
-import org.slf4j.LoggerFactory
+import info.mukel.telegrambot4s.models.{InputFile, KeyboardButton, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, File => BotFile}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -17,7 +15,8 @@ import scala.util.{Failure, Success}
 /**
   * Created by musta on 2016-08-18.
   */
-object Bot extends TelegramBot with Polling with MyCommands with AppModule with Logging {
+//noinspection TypeAnnotation
+trait Bot extends TelegramBot with MyCommands with AppModule with Logging {
 
   val fileManager = inject[FileManager]
   val userCache = inject[UserCache]
@@ -28,18 +27,6 @@ object Bot extends TelegramBot with Polling with MyCommands with AppModule with 
   val keyboard = {
     val size = Math.sqrt(effects.size).toInt
     effects.map(ef => KeyboardButton(ef.name)).grouped(size).toList
-  }
-
-
-  lazy val token = try {
-    val prop = new Properties()
-    prop.load(getClass.getResourceAsStream("/config.properties"))
-    prop.getProperty("bot.token")
-  } catch {
-    case e: Exception =>
-      e.printStackTrace()
-      log.error("You should add bot.token key in config.properties")
-      sys.exit(1)
   }
 
   def downloadUrl(token: String, dwnPath: String) = s"https://api.telegram.org/file/bot$token/$dwnPath"
@@ -78,7 +65,10 @@ object Bot extends TelegramBot with Polling with MyCommands with AppModule with 
         path => fileManager.downloadFile(downloadUrl(token, path), file.fileId + ".ogg")
       }.getOrElse(Future.failed(new Exception))
     }
-    file.onFailure { case f => logger.error("Failed to download", f) }
+    file.onComplete {
+      case Failure(f) =>
+        logger.error("Failed to download", f)
+    }
 
     file.flatMap(voiceChanger.applyEffect(_, effect.get)).onComplete {
       case Success(result) =>
@@ -101,7 +91,5 @@ object Bot extends TelegramBot with Polling with MyCommands with AppModule with 
 
   }
 
-  //  override def port: Int = System.getenv("PORT").toInt
 
-  //  override def webhookUrl: String = "https://enigmatic-reaches-38677.herokuapp.com/"
 }

@@ -1,11 +1,13 @@
 
-name := "bot"
-scalaVersion := "2.12.4"
+name := "pimpv_bot"
+scalaVersion := "2.12.6"
 version := "1.0"
 scalacOptions := Seq("-feature", "-unchecked", "-deprecation", "-encoding", "utf8")
 
 
-resolvers += "jitpack" at "https://jitpack.io"
+resolvers ++= Seq(
+  "jitpack" at "https://jitpack.io"
+)
 
 libraryDependencies ++= Seq(
   "com.github.mukel" %% "telegrambot4s" % "v3.0.4",

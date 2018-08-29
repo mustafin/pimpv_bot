@@ -7,7 +7,7 @@ package bot
   */
 object Main {
   def main(args: Array[String]) {
-    Bot.run()
+    PollingBot.run()
   }
 }
 
