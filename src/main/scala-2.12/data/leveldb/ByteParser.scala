@@ -28,6 +28,7 @@ object ByteParser{
 
   val instantiator = new ScalaKryoInstantiator
   instantiator.setRegistrationRequired(false)
+
   val k = KryoPool.withByteArrayOutputStream(5, instantiator)
   val kryo = instantiator.newKryo()
 

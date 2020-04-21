@@ -1,20 +1,21 @@
 package bot
 
-import info.mukel.telegrambot4s.api.declarative.Commands
-import info.mukel.telegrambot4s.models.Message
+import com.bot4s.telegram.api.declarative.Commands
+import com.bot4s.telegram.models.{Message, Voice}
 
 /**
   * Created by musta on 2016-08-20.
   */
-trait MyCommands extends Commands{
+trait MyCommands { _: Commands =>
 
 
-  //TODO Check
-  def handleMessage(message: Message): Unit = {
-    message.voice.foreach(_ => onVoice(message))
+  onMessage{ implicit msg =>
+    using(_.voice){ v =>
+      onVoice(v)
+    }
   }
 
 
-  def onVoice(message: Message): Unit
+  def onVoice(voice: Voice)(implicit message: Message): Unit
 
 }
